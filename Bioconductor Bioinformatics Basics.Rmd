@@ -1,0 +1,908 @@
+---
+title: "BIoconductor |Bioinformatics Basics"
+output: html_notebook
+---
+
+
+```{r}
+# This R environment comes with many helpful analytics packages installed
+# It is defined by the kaggle/rstats Docker image: https://github.com/kaggle/docker-rstats
+# For example, here's a helpful package to load
+
+library(tidyverse) # metapackage of all tidyverse packages
+
+# Input data files are available in the read-only "../input/" directory
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
+
+list.files(path = "C:/Users/samen/Desktop/Bioinformatics Projects/Bioconductor tools for Mass Spectrometry/Bioconductor")
+
+# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using "Save & Run All" 
+# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session
+```
+
+```{r}
+suppressWarnings(expr)
+```
+
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+#packages installation
+if (!requireNamespace("BiocManager", quietly= TRUE))
+    install.packages("BioManager")
+BiocManager:: install("Biostrings")
+BiocManager:: install("msa")
+```
+BIOCONDUCTOR¶ Bioconductor is quite more advanced compared to say Biopython & requires minimal programming on the user end. I have covered some basic sequence operations in a biopython notebook or Working with Sequences noteobook on a relatable topic. The libraries used in this notebook:
+
+(I) Biostrings ( General base library for work with strings, uses FASTA for imports ) (II) msa ( Library for multiple sequence alignment, containing more advanced methods than the progressive approach covered in biological sequence alignment ) 
+
+
+
+```{r}
+#Bioconductor:: Biostrings
+#import library without messages
+
+suppressPackageStartupMessages(library(Biostrings))
+```
+
+```{r}
+#Sequence Operations
+
+#1 Defining characters of DNA and amino acids
+chr_n1 = "ACTTCACCAGCTCCCTGGCGGTAAGTTGATCAAAGGAAAC"
+chr_n2 = "TTTCGGGTAAGTAAATATATGTTTCACTACTTCCTTTCGG"
+
+chr_aa1 = 'PAWHEAE'
+chr_aa2 = 'HEAGAWGHEE'
+
+
+# Nucleotide String
+s1_n <- DNAString(chr_n1) #DNAString
+s2_n <- DNAString(chr_n2)
+s2_n
+
+#Amino Acid String
+s1_aa = AAString(chr_aa1)
+s2_aa = AAString(chr_aa2)
+s2_aa
+```
+
+```{r}
+#Define a new XstringSet from characters (3 sequences)
+
+#concat to make vector with c()
+str_concat = c("ACGT","GTCA","GCTA")
+n_set <- AAStringSet(str_concat)
+n_set
+
+#Define a new XStringSet from characters (1 sequence)
+
+n_set_1 <- DNAStringSet(c("ACGT"))
+n_set_1 
+```
+```{r}
+#Create a stringset from a sequence string
+#Using DNAString -> DNAStringSet
+
+str_strset = DNAStringSet(s1_n)
+```
+
+
+```{r}
+# Start with set (just the one)
+string = n_set[1]
+string
+```
+
+
+```{r}
+#Convert XStringSet to Character
+dna_char <- toString(n_set[1])
+class(dna_char) #check the class type
+dna_char #print character
+```
+```{r}
+#start with many strings in a stringset
+print(n_set)
+```
+```{r}
+lst <- list() #defines an empty list
+
+#loop through allin n_set
+for(i in 1:length(n_set)) {
+    lst <- c(lst, toString(n_set[i]))
+}
+
+lst  #list containing characters
+```
+
+```{r}
+# Set - > Single sequence
+string = n_set[[1]] # extract single sequence 
+string # print string
+
+# use toString
+char = toString(string)
+char  # print character
+class(char) # print char type
+```
+
+
+'''READING SEQUENCES FROM FASTA FILE¶ Usually when working with realistic sequences formats such as FASTA & GenBank are used Biostrings uses the FASTA format for operations, loading & saving. The two class formats used upon the sequence(s) being read: DNAStringSet for nucleotide sequence set (even just the one) AAStringSet for amino acid sequences'''
+
+
+```{r}
+# File Containing One Sequence
+fasta_n = readDNAStringSet('C:/Users/samen/Desktop/Bioinformatics Projects/Bioconductor tools for Mass Spectrometry/Bioconductor/sequences/example.fasta')
+fasta_n # print read data 
+class(fasta_n) # print read class format
+names(fasta_n) # print name of sequence
+```
+```{r}
+# can use (Biostrings::) prefix as well
+fasta_aa = Biostrings::readAAStringSet('C:/Users/samen/Desktop/Bioinformatics Projects/Bioconductor tools for Mass Spectrometry/Bioconductor/sequences/NC_005816.faa')
+fasta_aa
+class(fasta_aa) # AAStringSet object
+```
+```{r}
+#always start with 1, not a 0 like python
+fasta_aa[1] #Still AA stringset object but length of 1
+```
+```{r}
+#Other operations of fast.aa files
+width(fasta_aa[1]) #get length of sequence
+seq(fasta_aa[1]) #sequence number
+names (fasta_aa[1]) #get the character object type of the sequence
+class(char) #show object class
+```
+
+'''SAVING SEQUENCES TO FASTA FORMAT writeXStringSet is used to save a StringSet, which has the option to save in FASTA format'''
+
+
+```{r}
+n_set #an aastringset we wish to save
+
+
+```
+
+
+```{r}
+#Save XStringSet
+writeXStringSet(n_set, filepath = 'C:/Users/samen/Desktop/Bioinformatics Projects/Bioconductor tools for Mass Spectrometry/Bioconductor/output/dna_list.fasta', format = 'fasta' )
+```
+
+```{r}
+#confirmation only (read the file)
+confirm_dna_xstrset = readDNAStringSet ('C:/Users/samen/Desktop/Bioinformatics Projects/Bioconductor tools for Mass Spectrometry/Bioconductor/output/dna_list.fasta')
+
+confirm_dna_xstrset
+```
+
+```{r}
+# combine characters 
+x0 <- DNAStringSet(c("CTCCCAGTAT", "TTCCCGA", "TACCTAGAG"))  # String Set #1
+x1 <- DNAStringSet(c("AGGTCGT", "GTCAGTGGTCCCC", "CATTTTAGG")) # String Set #2
+x2 <- DNAStringSet(c("TGCTAGCTA", "AGTCTTGC", "AGCTTTCGAG")) # String Set #3
+
+dna_list <- list(x0, x1, x2) # create a list of String Sets
+dna_xstrset = do.call(c, dna_list) # concentrate 
+dna_xstrset
+```
+
+```{r}
+#Select only specific sequences from Set
+dna_xstrset[1:2] #indexing a Set -> selecting sequences
+
+new_set <- dna_xstrset[9] #set to new variable
+```
+
+```{r}
+# Selecting Sequence Subset w/ range
+subseq_aa = subseq(s2_aa, start=1,end=5)
+subseq_aa
+```
+
+'''1.4 | BASIC FUNCTIONALITY
+
+Some basic functions appliable to StringSet, some of which have not been used yet, mainly to do with ordering or visualisation inside the set '''
+```
+
+
+```{r}
+# [1] basic operations
+
+length(dna_xstrset) # number of sequences
+names(dna_xstrset) # sequence names in set
+head(dna_xstrset) # show top sequences  
+tail(dna_xstrset) # show bottom sequences
+width(dna_xstrset) # length of sequences in set
+```
+
+
+```{r}
+#sort & rev are sorters of String Sets, by using the sequence alphabet
+sort(dna_xstrset) #sort by sequence alphabet
+rev(dna_xstrset) #reverse sequence order
+```
+
+
+
+```{r}
+#chartr used to replace characters in a sequence set
+# [3] replace parts of a sequene in a set
+# Replace Certain parts of the sequence
+# let's replace C with T
+
+dna_xstrset[1] #dna string set object
+
+dna_chartr <- chartr("C", #from
+                     "T", #to
+                     dna_xstrset[1]) #in string set
+
+dna_chartr
+```
+
+```{r}
+#findPalindromes can be used to find palindromes in a sequence
+# On a DNA or RNA sequence:
+dna_seq <- DNAString("CCGAAAACCATGATGGTTGCCAG")
+findPalindromes(dna_seq)
+```
+
+''' 1.5 | BIOLOGICAL FUNCTIONS
+
+Biological functality relating to DNA is found in Biostrings as well
+Having one of the strands, we can get its reverse, complement & reverse complement, similar to that was shown in notebook Biological Sequence Operations
+Translation from DNA (or RNA) to chains of amino acids / proteins can be done via translate
+Translation works with both strings & string set objects '''
+```
+
+
+```{r}
+#operations using DNAString and AAString Objects
+s1_reverse <- reverse(s1_n)
+s1_complement <- complement(s1_n)
+s1_reversecomplement = reverseComplement(s1_n)
+
+c(s1_reverse)
+c(s1_complement)
+c(s1_reversecomplement)
+
+#Same goes for DNAStringSet class sequences
+class(fasta_n) #check class
+s1_reverse_xstr = reverse(fasta_n)
+s1_reverse_xstr
+```
+
+```{r}
+# Translation works w/ Sets or just the XString
+s1_translate <- translate(dna_xstrset[[3]], no.init.codon=TRUE)
+s1_translate
+```
+
+
+'''1.6 | COUNTING CHARACTERS
+
+Sequence alphabet counts are quite relevant in bioinformatics, eg. GC Content is the dinucleotide count
+Other sequence alphabet counters:
+
+alphabetFrequency - For a general alphabet count of the sequence/set
+dinucleotideFrequency - For two character pair counts
+trinucleotideFrequency - For three character pair counts (codons)
+oligonucleotideFrequency - General form of the three above & beyond, description below:
+Oligonucleotides | ScienceDirect
+
+Oligonucleotides are small molecules 8–50 nucleotides in length that bind via Watson-Crick base pairing to enhance or repress the expression of target RNA ''''
+
+
+```{r}
+alphabetFrequency(DNAString(s1_complement))
+#calculate the alphabet frequency of a DNA sequence
+```
+```{r}
+uniqueLetters(dna_xstrset[1])
+#show all unique characters in a sequence
+```
+```{r}
+# Character frequency functions
+sequence <- dna_xstrset[1]
+sequence
+
+dinucleotideFrequency(sequence)
+trinucleotideFrequency(sequence)
+oligonucleotideFrequency(sequence,width=2)
+oligonucleotideFrequency(sequence,width=4)
+```
+
+```{r}
+#Similar to Pandas, if the list is too long,the default view will ...
+#'options' can be used to change the maximum column count
+
+options(repr.matrix.max.cols = 70,
+        repr.matrix.max.rows = 100)
+```
+
+```{r}
+
+trinucleotideFrequency(dna_xstrset[1])
+```
+
+
+```{r}
+#calculating consensus matrix for a string set
+dna_xstrset
+```
+
+```{r}
+consensusMatrix(dna_xstrset, as.prob = FALSE)
+```
+
+'''2 | PAIRWISE SEQUENCE ALIGNMENT¶
+Given the significance of PSA in various application of bioinformatics, we will look at quite a few things that are associated with this part of the library.
+
+The gap penalties are regulated by the gapOpening and gapExtension arguments
+First we need to define aspects of our objective function; substitution matrix & gap penalties
+Gap penalties are specified in pairwiseAlignment, whilst the substitution matrix is created or called separately
+nucleotideSubstitutionMatrix - Create a substitution matrix w/ a match & mismatches in a nucleotide sequence or use strings to call preset aa matrices
+pairwiseAlignment - sequence alignment, by default global option is set
+Similar to python, long strings will contain ...:
+To display the whole sequence we can use alignedPattern & alignedSubject together with c() '''
+```
+
+'''2.1 | ALIGNMENT EXAMPLES
+
+NUCLEOTIDE GLOBAL SEQUENCE ALIGNMENT
+Nucleotide global sequence alignment using the Needleman Wunsch algorithm
+We can set a self defined substitution matrix (constant match/mismatch) using nucleotideSubstitutionMatrix
+pairwiseAlignment requires arguments type= ''global'', substitutionMatrix (mat) & gap model settings (gapOpening,gapExtension) '''
+```
+
+```{r}
+#Two sequences to be globally aligned
+
+s1_n
+s2_n
+```
+
+```{r}
+# Nucleotide Global Alignment
+
+#Define our own substition matrix (nucleotide)
+
+mat <- nucleotideSubstitutionMatrix(match = 1, mismatch = -3, 
+                                    baseOnly = TRUE)
+
+mat
+class(mat)
+
+#Global Alignment (Needleman Wunsch)
+globalAlign <- pairwiseAlignment(s1_n, s2_n, #sequences we want to align
+                                 type = 'global', #type of alignment
+                                 substitutionMatrix = mat, #substitution matrix
+                                gapOpening = 5, gapExtension =2 
+                                #gap penalty arguments
+                                )
+
+globalAlign
+
+```
+
+```{r}
+#NUCLEOTIDE LOCAL SEQUENCE ALIGNMENT
+#Smith-Waterman local sequence alignment between two nucleotide sequences s1_n & s2_n 
+
+#Nucleotide Local Sequence Alignment (Smith-Waterman)
+
+localAlign <- pairwiseAlignment(s1_n, s2_n, type = "local",
+                                substitutionMatrix = mat,
+                                gapOpening= 5, gapExtension = 2)
+
+localAlign
+```
+
+```{r}
+#Protein Global Alignment
+#Needleman-Wunsch global sequence alignment between two amino acid chain sequences
+#s1_aa and s2_aa
+#global alignment(default type) using BLOSUM Substitution mAtrix
+
+#45, 50,62, 80,100
+
+pairwiseAlignment(s1_aa, s2_aa, substitutionMatrix = "BLOSUM62",
+                  gapOpening = 0, gapExtension = 8)
+```
+
+```{r}
+#global alignment (default type) using PAM substituion Matrix
+
+#30,40,70,120,250
+pairwiseAlignment(s1_aa, s2_aa,
+                  substitutionMatrix = 'PAM250',
+                  gapOpening = 0, gapExtension = 1)
+```
+
+```{r}
+#Extracting Data from Alignments
+#getting individual sequence in the alignment, alignedPattern and alignedSubject in StringSet object format
+
+#sequence extraction 
+s1_nset = DNAStringSet(chr_n1)
+s2_nset = DNAStringSet(chr_n2)
+
+#Pairwise Sequence Alignment operation
+alg <- pairwiseAlignment(s1_nset, s2_nset)
+
+#recalling the sequences in a pairwise alignment
+alignedPattern(alg)
+toString(alignedSubject(alg)) #convert string
+
+```
+
+```
+# 2.3 | SEQUENCE ALIGNMENT SUMMARY
+
+#Functions related to alignment summary
+
+#summary alphabet() compareStrings()
+#deletion() mismatchTable()
+#nchar() nedit() indel()
+#insertion() nindel()
+#nmatch() nmismatch()
+#pattern() subject()
+#pid() rep() score() type()
+
+```
+
+```{r}
+#summary of alignment
+summary(alg)
+```
+
+```{r}
+globalAlign
+```
+
+```{r}
+# Other alignment related functions
+
+alphabet(globalAlign) # show characters of alignment sequences
+compareStrings(globalAlign) # compare strings of sequences
+deletion(globalAlign)
+mismatchTable(globalAlign)
+nchar(globalAlign)
+nedit(globalAlign)
+indel(globalAlign)
+insertion(globalAlign)
+nindel(globalAlign)
+nmatch(globalAlign)
+nmismatch(globalAlign) 
+pattern(globalAlign) # show only pattern sequence
+subject(globalAlign) # show only subject sequence
+pid(globalAlign)
+rep(globalAlign)
+score(globalAlign) # alignment score
+type(globalAlign) # alignment type
+```
+
+
+2.4 | SEQUENCE ALIGNMENT APPLICATION
+
+REMOVING ADAPTERS FROM SEQUENCE READINGS
+An interesting PSA example was shown in the Pairwise Sequence Reference & is related to experimentally processed DNA sequences
+Trimming adapter sequences - is it necessary?
+
+Removal of adapter sequences in a process called read trimming, or clipping, is one of the first steps in analyzing NGS data. With more than 30 published adapter trimming tools there is a more than large choice for the appropriate tool. Yet, there is a debate whether this step really is as important as the number of tools suggests, or whether it is possible to skip this time-consuming step for many NGS applications.
+
+Finding and removing uninteresting experiment process-related fragments like adapters is a common problem in genetic sequencing
+Pairwise Sequence Alignment is well suited to address this sort of issue, as this problem relates to sequence similarity
+When adapters are used to anchor or extend a sequence during the experiment process, they either intentionally or unintentionally become sequenced during the read process & thus are present in the sequence
+```{r}
+DNA_ALPHABET # show full nucleotide alphabet
+N <- 1000 # number of desired sequences
+
+# strings have 0-36 characters from the adapters attached to each end
+adapter <- DNAString("GATCGGAAGAGCTCGTATGCCGTCTTCTGCTTGAAA")
+adapter
+
+set.seed(123)
+# used for function input
+experiment <- list(side = rbinom(N,1,0.5),
+                   width = sample(0:36,N,replace = TRUE))
+```
+```{r}
+# ''' Function to Generate DNA sequences /w these fragments '''
+# The following code simulates what sequences with adapter fragments at either end could look like during an experiment
+# https://www.bioconductor.org/packages/devel/bioc/vignettes/Biostrings/inst/doc/PairwiseAlignments.pdf
+
+simulateReads <-
+function(N, adapter, experiment, substitutionRate = 0.01, gapRate = 0.001) {
+    
+    chars <- strsplit(as.character(adapter), "")[[1]]
+    sapply(seq_len(N), function(i, experiment, substitutionRate, gapRate) {
+        
+        width <- experiment[["width"]][i]
+        side <- experiment[["side"]][i]
+        randomLetters <- function(n) sample(DNA_ALPHABET[1:4], n, replace = TRUE)
+        
+        randomLettersWithEmpty <- function(n) 
+            sample(c("", DNA_ALPHABET[1:4]), n, replace = TRUE,
+                   prob = c(1 - gapRate, rep(gapRate/4, 4)))
+        
+        nChars <- length(chars)
+        value <- paste(ifelse(rbinom(nChars,1,substitutionRate), 
+                              randomLetters(nChars), chars),
+                       randomLettersWithEmpty(nChars),sep = "", collapse = "")
+        if (side) 
+            value <- paste(c(randomLetters(36 - width), 
+                             substring(value, 1, width)),
+                           sep = "", collapse = "")
+        else
+            value <- paste(c(substring(value, 37 - width, 36), 
+                             randomLetters(36 - width)),
+                           sep = "", collapse = "") 
+        value }, experiment = experiment, substitutionRate = substitutionRate, gapRate = gapRate)
+}
+```
+
+
+```{r}
+# Generate Sequences w/ adapters from predefined function
+adapterStrings <- simulateReads(N,
+                                adapter,
+                                experiment,
+                                substitutionRate = 0.01, 
+                                gapRate = 0.001)
+
+# 1000 sequences of 36 signal length intervals
+adapterStrings <- DNAStringSet(adapterStrings)
+adapterStrings # strings that contain adapters
+```
+
+Using completely random strings as a baseline for any PSA methodology we develop to remove the adapter characters
+So let's create randomised DNA sequences using the DNA_ALPHABET using sample()
+
+```{r}
+# Generate Random DNA samples
+
+M <- 5000
+samples <- sample(DNA_ALPHABET[1:4], #Only 4 main nucleotides
+                  36*M,
+                  replace = TRUE)
+
+typeof(samples) #check type
+
+#generate matrix of samples
+sample_mat <- matrix(samples, nrow = M)
+typeof(sample_mat)
+
+randomStrings <- apply(sample_mat, 1, paste, collapse = "")
+
+randomStrings<- DNAStringSet(randomStrings)
+randomStrings
+```
+
+METHOD 1
+For the first approach, we'll use a match/mismatch of 0/-1 for the substitution matrix
+gap opening of 0 & gapEXtension of 1
+
+```{r}
+#Substitution MAtrix
+submat1 <- nucleotideSubstitutionMatrix(match =0, mismatch = -1, baseOnly = 
+                                          TRUE)
+# adapter strings DNA & adapter (0-36 characters attached to either end)
+# should have higher hit rate 
+
+adapterAligns1 <- pairwiseAlignment(adapterStrings,
+                                    adapter, 
+                                    substitutionMatrix = submat1,
+                                    gapOpening = 0, gapExtension = 1)
+
+adapterAligns1 # PairwiseAlignmentsSingleSubject (contains multiple PSA)]
+adapterAligns1_score <- score(adapterAligns1)
+
+
+```
+```{r}
+# random DNA & adapter (baseline for comparison only)
+randomScores1 <- pairwiseAlignment(randomStrings,
+                                   adapter, 
+                                   substitutionMatrix = submat1,
+                                   gapOpening = 0, gapExtension = 1,
+                                   scoreOnly = TRUE) # get the final alignment score only
+```
+
+
+```{r}
+# show the quantile data 99%+ score
+quantile(randomScores1, seq(0.99,1,0.001))
+```
+```{r}
+# find places where the adapter scores are higher than in baseline (using onlu 99.9% quartile data only) 
+# 29th character += 
+table(adapterAligns1_score > quantile(randomScores1,0.999), experiment[["width"]])
+```
+
+3 | ALIGNMENT OBJECTS
+Quite a number of application in Bioinformatics involve the use of biological sequence alignment
+We can read an alignment file using readDNAMultipleAlignment(filepath), examples shown below
+Masking is also used for various operations surrounding sequence alignments, in particular when we have lots of gaps in our alignments & want to remove them before using the data for analysis
+3.1 | IO ALIGNMENT
+
+READ ALIGNMENT
+Read Alignment | Two formats used for alignment: clustal, phylip
+
+
+```{r}
+# [1] read clustaw format (.aln)
+origMAlign <- readDNAMultipleAlignment(filepath = system.file("extdata","msx2_mRNA.aln",
+                                                              package="Biostrings"),
+                                                              format="clustal")
+# [1] read phylip format (.txt)
+phylipMAlign <- readAAMultipleAlignment(filepath = system.file("extdata","Phylip.txt",
+                                                               package="Biostrings"),
+                                                               format="phylip")
+```
+
+
+WRITING ALIGNMENT TO FILE
+We can write alignments using two different formats; FASTA & Phylip formats
+
+```{r}
+origMAlign
+```
+
+```{r}
+DNAStr = as(origMAlign, "DNAStringSet") #change DNAMultipleAlignment ->DNAStringset
+
+#Write to files
+writeXStringSet(DNAStr, file="DNAStr.fasta" ) #write in fasta format
+
+write.phylip(phylipMAlign, filepath = "phylipMalign.txt") #write in Phylip format
+```
+
+DISPLAY ALIGNMENT
+We can display the alignment via the object instance & the get the corresponding individual alignment name using rownames
+
+```{r}
+#Display an alignment
+origMAlign
+```
+
+```{r}
+#display alignment
+phylipMAlign
+```
+
+```{r}
+rownames (origMAlign) #show all
+rownames(origMAlign)[1]  #show just the one
+```
+CHANGE ALIGNMENT NAMES
+Set Alignment Names | rownames(aln) - Replace alignment names if we need to make it more clear for interpretation
+
+```{r}
+# [3] Make our own list of names & assign it to alignment rownames
+# These names are more are more easily interpretable
+rownames(origMAlign) <- c("Human","Chimp","Cow","Mouse","Rat","Dog","Chicken","Salmon") # concat characters
+origMAlign
+```
+
+SHOW DETAILED ALIGNMENT
+Show entire alignment | detail(aln) - can be used to display the entire sequence alignment
+```{r}
+# [4] Detail provides a view for all of the alignment
+# detail(origMAlign)
+```
+
+3.2 | ALIGNMENT MASKING
+
+We'll look at several types of alignment masking; basic masking, motif masking & gap masking
+
+BASIC MASKING
+Hiding Rows | rowmask(aln) - used for hiding some of the row content in an alignment
+Hiding Columns | colmask(aln) - used for hiding some of the column content in an alignment
+
+```{r}
+# [5] We can set rowmask w/ IRanges to hide some rows in alignment
+# let's mask the first three rows
+
+Test <- origMAlign
+rowmask(Test) <- IRanges(start=1,end=3) # set int range function
+Test
+
+# remove rowmask
+rowmask(Test) <- NULL
+```
+
+```{r}
+# [6] We can also use column masking
+# concat can be used to select multiple locations
+# let's mask the columns -> 1-500 & 1000-2343
+
+Test <- origMAlign
+colmask(Test) <- IRanges(2,4)
+colmask(Test) <- IRanges(6,8) # You can add multiple masks as well
+Test
+
+# remove column mask
+colmask(Test) <- NULL
+```
+
+
+MOTIF MASKING
+Masking with Motifs | Useful for masking subsequence occurences of a string from columns where it is present in the consensus sequence
+
+```{r}
+origMAlign
+```
+
+```{r}
+#a mask was found @1232 - 1236 of first row
+
+tata_mask <- maskMotif(origMAlign, "AAAA")
+colmask(tata_mask)
+```
+
+GAP MASKING
+Masking alignments with gaps | Useful for when we need to mask gaps that are present in the alignment
+
+MaskGaps also operate on columns & will mask columns based on the fraction of each column that contains gaps;
+min.fraction along with the width of columns that contain this fraction of gaps min.block.width
+
+```{r}
+autoMasked <- maskGaps(origMAlign, min.fraction = 0.5, min.block.width =4)
+
+autoMasked
+```
+
+```{r}
+# Multiple sequence alignment in matrix format
+full = as.matrix(origMAlign)
+dim(full)
+```
+3.3 | ALIGNMENT MASKING APPLICATIONS
+
+ALPHABET FREQUENCY w/ MASKING
+Having created masks for parts of the alignment which is of interest to us, we can conduct some form of investigation
+When using masks, operations will only include the non masked sequence characters, eg. alphabetFrequency.
+
+```{r}
+#if we mask the entire row, we get NA
+Test <- origMAlign
+
+rowmask(Test) <- IRanges(start = 1, end = 3) #set int range function
+
+alphabetFrequency(Test)
+```
+
+```{r}
+# [1] If we masked only parts of the row content, we'll get freq of only those that aren't masked
+autoMasked <- maskGaps(origMAlign,
+                       min.fraction=0.5,
+                       min.block.width=4)
+alphabetFrequency(autoMasked)
+```
+
+
+SEQUENCE SET CLUSTERING w/ MASKING
+We can also cluster the alignments in a StringSet based on their distance (stringDist) to each other | hclust
+Passing a DNAStringSet, the clustering will also take into account only those alphabet in the created masking | String Distance & Clustering Video
+Here we'll look at two cases, unmasked alignments & masked alginments, the benefit of masking being that the alignments contain lots of gaps (origMAlign)
+
+```{r}
+# ''' Bad Cluster Case '''
+
+# Calculate the distance to eachother (alignments)
+
+str_set <- as(origMAlign, "DNAStringSet") #convert/use alignment to/as string set
+
+class(str_set) #DNAStringSet
+str_set #the stringset only contains those present in the mask
+
+#Calculate Distance
+sdist <- stringDist(str_set, method = 'hamming')
+
+sdist
+
+# cluster using Hierarchical clustering, hclust
+clust <- hclust(sdist,
+                method = "single")
+clust
+
+pdf(file="tree1.pdf") # plot the clustering
+plot(clust) # plot dendogram of the clustering
+dev.off()
+
+# Cut the tree into four groups
+fourgroups <- cutree(clust, 4)
+fourgroups
+```
+
+```{r}
+# ''' Better Cluster Case '''
+
+# suppose we have created some mask for our alignment
+autoMasked 
+
+# Calculate the distance to eachother (alignments)
+class(autoMasked) # DNAMultipleAlignment class
+str_set <- as(autoMasked,"DNAStringSet") # convert/use alignment to/as string set
+class(str_set) # DNAStringSet
+str_set # the stringset only contains those present in the mask
+
+# Calculate distance
+sdist <- stringDist(str_set,
+                    method="hamming")
+sdist
+
+# cluster using Hierarchical clustering, hclust
+clust <- hclust(sdist,
+                method = "single")
+clust
+
+pdf(file="tree2.pdf") # plot the clustering
+plot(clust) # plot dendogram of the clustering
+dev.off()
+
+# Cut the tree into four groups
+fourgroups <- cutree(clust, 4)
+fourgroups
+
+```
+
+BIOCONDUCTOR :: msa
+The method used in biological sequence alignment can't handle lots of alignments described in snipplet:
+Most alignments are computed using the progressive alignment heuristic
+These methods are starting to become a bottleneck in some analysis pipelines when faced with data sets of the size of many thousands of sequences
+CLUSTALW, CLUSTALOMEGA, MUSCLE are all more advanced methods of multiple sequence alignment, varying in algorithm, but achieving the same goal
+So for realistic problems, we may have to compare lots of sequences togther, thus the above three algorithms are more preferable, to keep computational cost low
+Upon msa, we get MsaAAMultipleAlignment objects, which we already used in Section 3; the same alignment related operations used in Biostrings can be used (eg. masking)
+
+```{r}
+suppressPackageStartupMessages(library(msa))
+```
+
+```{r}
+# Load Example File
+mySequenceFile <- system.file("examples",
+                              "exampleAA.fasta",
+                              package="msa")
+
+# Read Amino acid string set
+mySequences <- readAAStringSet(mySequenceFile) # read stringset (same as biostrings library)
+mySequences
+```
+
+```{r}
+#Multiple Sequence Alignment
+aln <- msa(mySequences) #ClustalW used by default
+
+#same masking used in biostrings can be used
+
+rowmask(aln, invert= TRUE) <- IRanges(start = 1, end = 3)
+#print (aln, show= "complete") #show full alignment
+
+print(aln)
+```
+
+```{r}
+#MSA approach options
+myClustalWAlignment <- msa(mySequences, "ClustalW")
+myClustalOmegaAlignment <- msa(mySequences, "ClustalOmega")
+myMuscleAlignment <- msa(mySequences, "Muscle")
+
+```
+
+```{r}
+# using as() to change msa alignment type to StringSet
+AAStr = as(myMuscleAlignment, "AAStringSet") # output as String Set
+writeXStringSet(AAStr, file="AAStr.fasta") # write in FASTA format
+```
+
+
+Project Files & template from Andrey Shtrauss 
+
+
+
